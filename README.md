@@ -6,7 +6,7 @@
 (Discord OG roles), the other is for Aptos Mainnet liquidity provider.
 
 * OG Address List is still in binding and registering
-* [Liquidity Provider Address List](./LP_snapshot_address.md): 601 address
+* [Liquidity Provider Address List](./LP_snapshot_address.txt): 601 address
 
 ## Snapshot description
 The snapshot calculation is based on the liquidity provider and their total value locked (TVL) in the Aptos Mainnet.
