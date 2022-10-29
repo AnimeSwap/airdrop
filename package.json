@@ -15,7 +15,7 @@
   "main": "./dist/tsc/main.js",
   "types": "./dist/tsc/main.d.ts",
   "scripts": {
-    "bot-test": "ts-node src/index_testnet.ts",
+    "run": "ts-node src/index.ts",
     "lint": "eslint src/ --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
     "clean": "rm -rf dist build package",
