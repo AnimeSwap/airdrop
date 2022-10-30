@@ -1,5 +1,4 @@
 import Decimal from 'decimal.js'
-import result from '../result.json'
 import { d } from './utils/number'
 import fs from 'fs'
 
@@ -15,11 +14,17 @@ const addressPercent: Array<{address: string, value: Decimal}> = []
 let output = 'address,percent\n'
 
 function main() {
-  let sortedAddressArray: Array<Element> = result
-  // only consider add lp great than `1 apt * 7days`
+  let sortedAddressArray: Array<Element> = []
+  try {
+    const rawData = fs.readFileSync('result.json')
+    sortedAddressArray = JSON.parse(rawData.toString())
+  } catch (e) {
+    throw(e)
+  }
+  // only consider add lp great than `0.5 apt * 7days`
   sortedAddressArray = sortedAddressArray.filter(element => {
-    // 7 days * 1 apt
-    return d(element.value).gt(d(7 * 86400 * 1))
+    // 0.5 apt * 7days
+    return d(element.value).gt(d(7 * 86400 * 0.5))
   })
   // thanks for large liquidity provider, give them bonus
   sortedAddressArray[0].value = d(sortedAddressArray[0].value).mul(1.75)

@@ -6,7 +6,7 @@
 (Discord OG roles), the other is for Aptos Mainnet liquidity provider.
 
 * OG Address List is still in binding and registering
-* [Liquidity Provider Address List](./LP_snapshot_address.txt): 601 address
+* [Liquidity Provider Address List](./LP_snapshot_address.txt): 1001 address
 
 ## Snapshot description
 The snapshot calculation is based on the liquidity provider and their total value locked (TVL) in the Aptos Mainnet.
@@ -15,7 +15,7 @@ The snapshot time range
 * Start: Aptos Mainnet `version 2484089`, as soon as AnimeSwap protocol launch on Aptos Mainnet, 2022-10-19 03:28:16 UTC
 * End: Aptos Mainnet `version 14400000`, 2022-10-27 06:02:10 UTC
 
-The validated pair of snapshot is Top 10 TVL pair at snapshot end time:
+The validated pair of snapshot is Top 12 TVL pairs at snapshot end time:
 
 ```
 APT/tAPT
@@ -28,6 +28,8 @@ APT/stAPT
 APT/zUSDT
 zUSDC/zUSDT
 USDA/zUSDT
+APT/MOJO
+whUSDC/zUSDC
 ```
 
 For non APT pair, 10 USD equals to 1 APT weight
@@ -35,12 +37,12 @@ For non APT pair, 10 USD equals to 1 APT weight
 Each address contribution is calculated by the following formula:
 
 ```
-Address Contribution = Sigma(T, (Address TVL in Top 10 Pair) * delta(T))
+Address Contribution = Sigma(T, (Address TVL in Top 12 Pair) * delta(T))
 ```
 
 Total contribution formula:
 ```
-Total Contribution = Sigma(T, (Top 10 pair TVL) * delta(T))
+Total Contribution = Sigma(T, (Top 12 pair TVL) * delta(T))
 ```
 
 Each address `ANI` airdrop formula:
@@ -48,9 +50,9 @@ Each address `ANI` airdrop formula:
 Address ANI = (Total ANI Airdrop for LP) * (Address Contribution) / (Total Contribution)
 ```
 
-There are more than 5000 addresses in upper formula, most of them are too small contributions. The snapshot takes `1 APT * 7 days` as threshold for minimum contribution.
+There are more than 5000 addresses in upper formula, most of them are too small contributions. The snapshot takes `0.5 APT * 7 days` as threshold for minimum contribution.
 
-Finally, the snapshot get 601 individual addresses for ANI airdrop.
+Finally, the snapshot get 1001 individual addresses for ANI airdrop.
 
 ## ANI Tokenomic
 The full tokenomics documents is in polish stage.
