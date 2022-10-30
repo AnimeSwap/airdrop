@@ -6,7 +6,7 @@ import { composeSwapEvent } from './utils/contractComposeType'
 import { d } from './utils/number'
 import fs from 'fs'
 
-const sdk = new SDK('https://aptos-mainnet.nodereal.io/v1/76329ac799a3432aaf9993833593b847', NetworkType.Mainnet)
+const sdk = new SDK('https://fullnode.mainnet.aptoslabs.com', NetworkType.Mainnet)
 
 const aptos2usd = 10  // 1 apt = 10x usd weight
 const aptosCoin = '0x1::aptos_coin::AptosCoin'
@@ -24,8 +24,9 @@ const endVersion = 14400000 // 2022-10-27 06:02:10 GMT
 const endTimestamp = 1666850530 // 2022-10-27 06:02:10 GMT
 const address2TvlTimesTime: { [key: string]: Decimal } = {} // value(1apt) * time(seconds)
 const sortedAddress: Array<{address: string, value: Decimal}> = []
+let version2EventMeta: { [key: string]: EventMeta } = {}  // local cache, in case rpc server ratelimit
 
-// We encourage some pairs with BTC/ETH
+// We encourage pairs with BTC/ETH
 const topPools = [
   // APT/tAPT
   {
@@ -87,6 +88,18 @@ const topPools = [
     coinY: '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDT',
     factor: 1,
   },
+  // APT/MOJO
+  {
+    coinX: '0x1::aptos_coin::AptosCoin',
+    coinY: '0x881ac202b1f1e6ad4efcff7a1d0579411533f2502417a19211cfc49751ddb5f4::coin::MOJO',
+    factor: 1,
+  },
+  // whUSDC/zUSDC
+  {
+    coinX: '0x5e156f1207d0ebfa19a9eeff00d62a282278fb8719f4fab3a586a0a2c0fffbea::coin::T',
+    coinY: '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC',
+    factor: 1,
+  },
 ]
 
 // get events by coinPair and eventType
@@ -100,11 +113,13 @@ async function getEvents(params: EventParams): Promise<AptosEvent[]> {
 
 // get tx by version
 async function getTxByVersion(version: string): Promise<EventMeta> {
+  if (version2EventMeta[version]) return version2EventMeta[version]
   const tx = await sdk.resources.fetchTransactionByVersion<AptosTransaction>(BigInt(version))
-  return {
+  version2EventMeta[version] = {
     sender: tx.sender,
     timestamp: Number(tx.timestamp.substring(0, tx.timestamp.length - 6)),
   }
+  return version2EventMeta[version]
 }
 
 // insert with order
@@ -124,34 +139,22 @@ function sortedInsert<T>(items: T[], add: T, comparator: (a: T, b: T) => number)
 async function getCoinPairEvents(coinPair: CoinPair, mode: 'mint_event' | 'burn_event'): Promise<Array<AptosEvent>> {
   const batchSize = 100   // for rpc api, Max batch size is 100. More than 100 will take bug
   const allEvents: AptosEvent[] = []
-  let eventParams: EventParams = {
+  let start = BigInt(0)
+  while (1) {
+    console.log(`Counting ${mode} for ${coinPair.coinX}|${coinPair.coinY}, current ${allEvents.length} events`)
+    const eventParams: EventParams = {
       coinPair: coinPair,
       fieldName: mode,
       query: {
-          limit: batchSize,
+        start: start,
+        limit: batchSize,
       },
-  }
-  let events = await getEvents(eventParams)
-  allEvents.push(...events.filter(v => d(v.version).gt(d(startVersion)) && d(v.version).lt(d(endVersion)))) 
-  while (events.length > 0
-      && d(events[0].sequence_number).gt(0) 
-      && d(events[0].version).gt(d(startVersion))) {
-      console.log(`Counting ${mode} for ${coinPair.coinX}|${coinPair.coinY}, remains ${d(events[0].sequence_number)} events`)
-      // the api is strange, cannot use reverse start, so we do it like this
-      // you can only give the start sequence_number, so the next batch start should be `Max(events[0].sequence_number - batchSize, 0)`
-      let start = BigInt(events[0].sequence_number) - BigInt(batchSize)
-      const limit = start > BigInt(0) ? batchSize : batchSize + Number((start - BigInt(0)))
-      start = start > BigInt(0) ? start : BigInt(0)
-      eventParams = {
-          coinPair: coinPair,
-          fieldName: mode,
-          query: {
-              start: start,
-              limit: limit,
-          },
-      }
-      events = await getEvents(eventParams)
-      allEvents.push(...events.filter(v => d(v.version).gt(d(startVersion)) && d(v.version).lt(d(endVersion))))
+    }
+    const events = await getEvents(eventParams)
+    const filteredEvents = events.filter(v => d(v.version).gt(d(startVersion)) && d(v.version).lt(d(endVersion)))
+    allEvents.push(...filteredEvents)
+    if (filteredEvents.length == 0 || events.length !== filteredEvents.length) break  // find the last one
+    start = BigInt(filteredEvents[filteredEvents.length - 1].sequence_number) + BigInt(1)
   }
   console.log(`event length: ${allEvents.length}`)
   return allEvents
@@ -166,7 +169,7 @@ function updateTVL(address: string, priceTimesAmount: Decimal, timestamp: number
 }
 
 async function mintBurnEvent(coinX: string, coinY: string, mode: 'mint' | 'burn', factor: number) {
-  const networkBatch = 50
+  const networkBatch = 100
   console.log(`${mode}_event processing...`)
   const events = await getCoinPairEvents({
     coinX: coinX,
@@ -193,6 +196,7 @@ async function mintBurnEvent(coinX: string, coinY: string, mode: 'mint' | 'burn'
         throw(`Cannot decide coin type: ${coinX}, ${coinY}`)
       }
     }))
+    fs.writeFileSync('version2EventMeta.json', JSON.stringify(version2EventMeta))
   }
 }
 
@@ -202,6 +206,13 @@ async function calculateTVL(coinX: string, coinY: string, factor: number) {
 }
 
 async function main() {
+  try {
+    const rawData = fs.readFileSync('version2EventMeta.json')
+    version2EventMeta = JSON.parse(rawData.toString())
+  } catch (e) {
+    console.log(e)
+    version2EventMeta = {}
+  }
   for (const pool of topPools) {
     await calculateTVL(pool.coinX, pool.coinY, pool.factor)
   }
