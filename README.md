@@ -5,7 +5,7 @@
 `ANI` airdrop including two parts, one is for AnimeSwap community early backers
 (Discord OG roles), the other is for Aptos Mainnet liquidity provider.
 
-* [OG Bind Address List](./OG_bind_address.txt): 935 addresses
+* [OG Bind Address List](./OG_bind_address.txt): 936 addresses
 * [Liquidity Provider Address List](./LP_snapshot_address.txt): 1001 addresses
 
 ## Snapshot description
