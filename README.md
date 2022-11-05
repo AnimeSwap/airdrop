@@ -9,7 +9,7 @@
 * [OG Bind Address List](./OG_bind_address.txt): 936 addresses
 * [Liquidity Provider Address List](./LP_snapshot_address.txt): 1001 addresses
 
-## [ANI Tokenomic](https://docs.animeswap.org/docs/tutorial/Tokenomic)
+## [ANI Tokenomics](https://docs.animeswap.org/docs/tutorial/Tokenomics)
 
 ## Snapshot description
 The snapshot calculation is based on the liquidity provider and their total value locked (TVL) in the Aptos Mainnet.
