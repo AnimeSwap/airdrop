@@ -2,11 +2,14 @@
 
 `ANI` is AnimeSwap native token.
 
+
 `ANI` airdrop including two parts, one is for AnimeSwap community early backers
 (Discord OG roles), the other is for Aptos Mainnet liquidity provider.
 
 * [OG Bind Address List](./OG_bind_address.txt): 936 addresses
 * [Liquidity Provider Address List](./LP_snapshot_address.txt): 1001 addresses
+
+## [ANI Tokenomic](https://docs.animeswap.org/docs/tutorial/Tokenomic)
 
 ## Snapshot description
 The snapshot calculation is based on the liquidity provider and their total value locked (TVL) in the Aptos Mainnet.
@@ -53,6 +56,3 @@ Address ANI = (Total ANI Airdrop for LP) * (Address Contribution) / (Total Contr
 There are more than 5000 addresses in upper formula, most of them are too small contributions. The snapshot takes `0.5 APT * 7 days` as threshold for minimum contribution.
 
 Finally, the snapshot get 1001 individual addresses for ANI airdrop.
-
-## ANI Tokenomic
-The full tokenomics documents is in polish stage.
